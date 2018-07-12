@@ -1,8 +1,12 @@
+
+
 from tkinter import font as tkfont
 import tkinter.messagebox
 from tkinter import *
 from tkinter.ttk import *
-import math,cmath,random,os,sys
+import math
+import cmath
+import random
 
 
 #Allow users to save and load functions in text files
@@ -10,6 +14,8 @@ import math,cmath,random,os,sys
 #Have UI class inherit from Tk() in tkinter and use UI as your "root"
 
 #find out why "progress" in domain Gen is not displaying any changes
+
+
 
 
 #_________CONSTANTS and GLOBALS____________
