@@ -156,7 +156,7 @@ with open(configfileObject.name) as rf:
     parser.read_file(rf)
     
 configFont = ('Courier','-18',"bold")
-configInit = dictEval(dict(parser.items("INIT")
+configInit = dictEval(dict(parser.items("INIT")))
 configSpace = dictEval(dict(parser.items("SPACE")))
 
 
