@@ -155,7 +155,8 @@ configfileObject = filedialog.askopenfile(parent=root,mode='rb',title='Choose a 
 with open(configfileObject.name) as rf:
     parser.read_file(rf)
     
-configFont = ('Courier','-18',"bold")
+monoFont = ('Courier','-18',"bold")
+trueFont = ('Arial','-14')
 configInit = dictEval(dict(parser.items("INIT")))
 configSpace = dictEval(dict(parser.items("SPACE")))
 
@@ -171,7 +172,7 @@ class UI():
         self.real = Space(self,configSpace["pwidth"],configSpace["pheight"],configSpace["polar"],configSpace["xl"],configSpace["xr"],configSpace["yb"],configSpace["yt"],configSpace["mr"],configSpace["xgap"],configSpace["ygap"],configSpace["rgap"]) 
         #space needs to be defined here at the beginning so that menu and button commands can reffer to it without the Spce commands being "undefined"
         
-        #Menu Bar UI
+        ##Menu Bar UI
         #   A pretty standard block of code that just defines some menus at the top, most of which are currently placeholders.
         
         self.bar = Menu(parent)
@@ -191,12 +192,12 @@ class UI():
         self.edit.add_command(label="Copy", command=self.doNothing)
         self.edit.add_command(label="Paste", command=self.doNothing)
         
-        #Space Placement
+        ##Space Placement
         #   Simply places the space into a space in the UI
         #   I would prefer to create the space here but the menu buttons need to be able to reference it and I would rather have the UI class written roughly in order of the widgets position.
         self.real.can.grid(row=0,column=0,rowspan=3,columnspan=6) #grids the space canvas into the window
         
-        #Function Draw Config
+        ##Function Draw Config
         #   Sets up the buttons and entry boxes for function bounds and drawing options.
         self.controlSmooth = IntVar() #This is a control variable for the checkbutton
         self.controlFunkMin = StringVar() #These instantiate control variables for the text boxes contents
@@ -207,9 +208,9 @@ class UI():
         self.labelFunkMax = Label(parent, text="Input Maximum")
         self.labelFunkStep = Label(parent, text="Input Step")
         self.labelSmooth = Label(parent, text="Smoothing:")
-        self.entryFunkMin = Entry(parent,font=configFont, textvariable=self.controlFunkMin) #These set up entry boxes
-        self.entryFunkMax = Entry(parent,font=configFont, textvariable=self.controlFunkMax)
-        self.entryFunkStep = Entry(parent,font=configFont, textvariable=self.controlFunkStep)
+        self.entryFunkMin = Entry(parent,font=monoFont, textvariable=self.controlFunkMin) #These set up entry boxes
+        self.entryFunkMax = Entry(parent,font=monoFont, textvariable=self.controlFunkMax)
+        self.entryFunkStep = Entry(parent,font=monoFont, textvariable=self.controlFunkStep)
         self.checkSmooth = Checkbutton(parent,variable=self.controlSmooth) #This is the smoothing checkbutton
         self.btnColor = Button(parent, background=self.funkColor,relief=RIDGE,text="Color",borderwidth="3",command=self.pickColor)
         
@@ -228,13 +229,13 @@ class UI():
         self.btnColor.grid(column=3,row=4)
         
         
-        #Explicit Functions UI
+        ##Explicit Functions UI
         #   Sets up the buttons and entry boxes for inputing explicit functions.
         self.controlFunkExp = StringVar()
         
         self.labelFunkExp = Label(parent, text="Function: y=")
-        self.entryFunkExp = Entry(parent, font=configFont, textvariable=self.controlFunkExp) #Creates an input box in the window "root"
-        self.btnFunkExp = Button(parent, text="Explicit Funk",command=self.real.drawFunkExp)
+        self.entryFunkExp = Entry(parent, font=monoFont, textvariable=self.controlFunkExp) #Creates an input box in the window "root"
+        self.btnFunkExp = Button(parent, text="Draw Explicit Function",command=self.real.drawFunkExp)
         self.btnPlusMinusExp = Button(parent, text="±",command=self.plusMinusExp)
         
         self.controlFunkExp.set("x**2") #This sets up default values for entry box
@@ -245,16 +246,16 @@ class UI():
         self.btnPlusMinusExp.grid(column=4,row=6)
         
         
-        #Parametric Functions UI
+        ##Parametric Functions UI
         #   Sets up the buttons and entry boxes for inputing parametric functions.
         self.controlFunkParX = StringVar()
         self.controlFunkParY = StringVar()
         
         self.labelFunkParY = Label(parent, text="Function: y(t)=")
         self.labelFunkParX = Label(parent, text="Function: x(t)=")
-        self.entryFunkParX = Entry(parent, font=configFont, textvariable=self.controlFunkParX)
-        self.entryFunkParY = Entry(parent, font=configFont, textvariable=self.controlFunkParY)
-        self.btnFunkPar = Button(parent, text="Parametric Funk",command=self.real.drawFunkPar)
+        self.entryFunkParX = Entry(parent, font=monoFont, textvariable=self.controlFunkParX)
+        self.entryFunkParY = Entry(parent, font=monoFont, textvariable=self.controlFunkParY)
+        self.btnFunkPar = Button(parent, text="Draw Parametric Function",command=self.real.drawFunkPar)
         self.btnPlusMinusParX = Button(parent, text="±",command=self.plusMinusParX)
         self.btnPlusMinusParY = Button(parent, text="±",command=self.plusMinusParY)
         
@@ -269,7 +270,17 @@ class UI():
         self.btnPlusMinusParX.grid(column=4,row=8)
         self.btnPlusMinusParY.grid(column=4,row=7)
         
-
+        ##Function Menu UI
+        #   Sets up the side menu that lists functions.
+        self.controlListboxFunk = StringVar()
+        
+        self.listboxFunk = Listbox(parent,listvariable=self.controlListboxFunk,width=40,font=trueFont)
+        self.btnRedraw = Button(parent,text="Redraw")
+        
+        self.listboxFunk.grid(column=6, row=0, rowspan=3,sticky=N+S)
+        self.btnRedraw.grid(column=6, row=3)
+        
+    ##UI Functions
     def doNothing(self):
         print(random.choice(["donuts","","coffee","42","Spaghetti"]))
     
@@ -341,7 +352,7 @@ class Space:
         self.axlbls = TickLabels(self) #object that stores and calls the TickLabels object for displaying numbers by the axes
         self.funkList = [] #creates an empty list to store functions
     
-    #Coordinate Conversion Functions
+    ##Coordinate Conversion Functions
     def coordPxl(self,xcoord,ycoord): #input a real coordinate, returns a pixel location as a list object
         pixelx = int((xcoord - self.minx) * self.dx)
         pixely = int(self.h - ((ycoord - self.miny) * self.dy))
@@ -358,7 +369,7 @@ class Space:
     def pxlPol(self,x,y): #input a pixel location, returns a polar coordinate
         pass #polar update pending
     
-    #Line drawing functions
+    ##Line drawing functions
     def drawFunkExp(self):
         if "±" in self.parent.entryFunkExp.get():
             for f in iterateFunk(self.parent.entryFunkExp.get()):
@@ -376,7 +387,7 @@ class Space:
     
 
     
-    #Clear the canvas of lines    
+    ##Clear the canvas of lines    
     def clearCanvas(self):
         for f in self.funkList:
             self.can.delete(f.line)
@@ -393,7 +404,7 @@ class Point: #this class is used to draw points on the canvas
             self.hor = parent.can.create_line(xcenter-11,ycenter,xcenter+12,ycenter)
             self.vert = parent.can.create_line(xcenter,ycenter+11,xcenter,ycenter-12)
             self.rndl = parent.can.create_oval(xcenter-8,ycenter+8,xcenter+8,ycenter-8,outline="red")
-            self.lbl = parent.can.create_text(xcenter,ycenter+20,text=str([xtheta,yr]),font = configFont)
+            self.lbl = parent.can.create_text(xcenter,ycenter+20,text=str([xtheta,yr]),font = monoFont)
 #
 #
 class MajorAxes: #this is the primary X and Y axes gridlines (see minor for the faded lines)
@@ -467,14 +478,14 @@ class Funk:#this class stores and draws functions on the space
         self.coordsX = [] #defines an empty list to store the X coordinates
         self.coordsY = [] #defines an empty list to store the Y
         try:
-            beg=eval(parent.parent.entryFunkMin.get())
-            mid=eval(parent.parent.entryFunkStep.get())
-            end=eval(parent.parent.entryFunkMax.get())
+            self.beg=eval(parent.parent.entryFunkMin.get())
+            self.mid=eval(parent.parent.entryFunkStep.get())
+            self.end=eval(parent.parent.entryFunkMax.get())
         except:
              tkinter.messagebox.showinfo("Boundin'", "There's something wrong with your bounds.")
              raise
         if type == "exp":
-            for c in domainGen(beg,end,mid):
+            for c in domainGen(self.beg,self.end,self.mid):
                 x = c
                 self.coordsX.append(x)
                 try:
@@ -486,8 +497,9 @@ class Funk:#this class stores and draws functions on the space
                     self.coordsX.append(x)
                     x = x +0.0001
                     self.coordsY.append(eval(self.funk))
+            parent.parent.listboxFunk.insert(END,"y=" + self.funk)
         elif type == "par":
-            for c in domainGen(beg,end,mid):
+            for c in domainGen(self.beg,self.end,self.mid):
                 t = c
                 try:
                     self.coordsX.append(eval(self.funkX))
@@ -499,6 +511,7 @@ class Funk:#this class stores and draws functions on the space
                     t = c +0.0001
                     self.coordsX.append(eval(self.funkX))
                     self.coordsY.append(eval(self.funkY))
+            parent.parent.listboxFunk.insert(END,"x=" + self.funkX + ", y=" + self.funkY)
 
         for x,y in zip(self.coordsX,self.coordsY):
             pxlX, pxlY = parent.coordPxl(x,y)
@@ -511,11 +524,9 @@ class Funk:#this class stores and draws functions on the space
         
         
         
-##___________________________SCRIPT______________________
-
+##SCRIPT
 
 ui = UI(root)
-
 root.mainloop()
 
 
