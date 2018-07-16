@@ -14,7 +14,7 @@ To run this, simply open the .py file with your favrourite Python interpreter.
 To draw a function type a mathematical expression in python code into the entry bars.
 
 # TO DO FOR FUTURE (In order of priority)
-1. Allow users to edit Space configurations by loading the configurations from a text file using tkinters File Selection Window.
+1. ~Allow users to edit Space configurations by loading the configurations from a text file using tkinters File Selection Window.~
   
 2. A settings window allowing the user to copy/paste settings or use a menu.   
 

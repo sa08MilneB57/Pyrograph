@@ -1,4 +1,4 @@
-program_ver = "0.12" #Updated with any new code/upload to gitHub
+program_ver = "0.13" #Updated with any new code/upload to gitHub
 config_ver = "0.01"
 py_ver = "3.5.1" #Updated whenever the code is tested on a newer version of Python
 
