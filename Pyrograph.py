@@ -1,31 +1,23 @@
-
+program_ver = "0.12" #Updated with any new code/upload to gitHub
+config_ver = "0.01"
+py_ver = "3.5.1" #Updated whenever the code is tested on a newer version of Python
 
 from tkinter import font as tkfont
 import tkinter.messagebox
 from tkinter import *
-from tkinter.ttk import *
-import math
-import cmath
-import random
+#from tkinter.ttk import *
+from tkinter import filedialog
+from tkinter import colorchooser
+import itertools,math,cmath,random,configparser
 
-
-#Allow users to save and load functions in text files
-
-#Have UI class inherit from Tk() in tkinter and use UI as your "root"
-
-#find out why "progress" in domain Gen is not displaying any changes
-
-
-
-
-#_________CONSTANTS and GLOBALS____________
+##CONSTANTS and GLOBALS
 root = Tk() #Top Level Window Object
-root.title("Graphs")
-configFont = ('Courier','-18',"bold")
-program_ver = "0.11" #Updated with any new code/upload to gitHub
-file_ver = "0.1" #Updated with any new user config settings
-py_ver = "3.5.1" #Updated whenever the code is tested on a newer version of Python
-
+root.title("Pyrograph")
+def dictEval(dic):#Evaluates a dictionary of strings into their interpreted values.
+    evalled = {}#Creates empty temporary dictionary.
+    for k,v in dic.items():#Goes through each key,value pair of the input.
+        evalled[k] = eval(v)#Adds entry to temporary variable with string evaluated.
+    return(evalled)#Returns the new dictionary.
 
 def domainGen(start,end,step):
     global progress
@@ -39,7 +31,8 @@ def domainGen(start,end,step):
             domain.append(n*step)
     return domain
 
-def getPrec(usr_input):#calculates the "decimal point precision" of a number stored in a string
+def getPrec(usr_input):
+    #calculates the "decimal point precision" of a number stored in a string.   e.g. usr_input = "0.001" returns 3
     if '.' in usr_input:
         return len(usr_input) - usr_input.index('.') - 1
     else:
@@ -56,6 +49,26 @@ def search(find,string):
         if string[c] == find:
             result.append(c)
     return result
+
+#Plus Minus functionality
+def iterateFunk(funk):
+    length = funk.count("±") #this stores the length of the binary numbers used to calculate possible combinations
+    combinations = 2**length #this is the total number of binary combinations of +s and -s
+    str_index = search("±",funk)
+    orders = [] #instantiates empty list for storing all the binary combinations
+    new_funks = [] #instantiates empty list for storing all the new functions generated
+    for i in range(combinations):
+        orders.append(get_bin(i,length))#adds a binary number to "orders" from 0 to 2**length
+    for o in orders: #loops through every possible order
+        track_o = list(o) #copies the current order as a list into temporary variable
+        list_funk = list(funk) #copies the function as a list into temporary variable
+        for i in range(length): #iterates over each ± sign
+            if int(track_o.pop(0)) == 0:#0 replaces it with +, 1 replaces it with a -
+                list_funk[int(str_index[i])] = "+"
+            else:
+                list_funk[int(str_index[i])] = "-"
+        new_funks.append("".join(list_funk))
+    return new_funks
 
 #This stores all possible color names for tkinter to allow random color generation and user choice from comboboxes.
 COLORS = ['snow', 'ghost white', 'white smoke', 'gainsboro', 'floral white', 'old lace',
@@ -135,12 +148,28 @@ COLORS = ['snow', 'ghost white', 'white smoke', 'gainsboro', 'floral white', 'ol
           'gray84', 'gray85', 'gray86', 'gray87', 'gray88', 'gray89', 'gray90', 'gray91', 'gray92',
           'gray93', 'gray94', 'gray95', 'gray97', 'gray98', 'gray99']
 
+##User Configuration
 
-#_______________________CLASSES________________________
-class UI:
+parser = configparser.ConfigParser()
+configfileObject = filedialog.askopenfile(parent=root,mode='rb',title='Choose a file')
+with open(configfileObject.name) as rf:
+    parser.read_file(rf)
+    
+configFont = ('Courier','-18',"bold")
+configInit = dictEval(dict(parser.items("INIT")))
+configSpace = dictEval(dict(parser.items("SPACE")))
+
+
+##CLASSES
+#
+#
+class UI():
     def __init__(self,parent):#parent must be Tk() Object
+        global iterateFunk
         self.parent = parent
-        self.real = Space(self,1600,1200,False,-40,40,-30,30,0,1,1,0) #space needs to be defined here so that menu commands can reffer to it
+        self.funkColor = "red"
+        self.real = Space(self,configSpace["pwidth"],configSpace["pheight"],configSpace["polar"],configSpace["xl"],configSpace["xr"],configSpace["yb"],configSpace["yt"],configSpace["mr"],configSpace["xgap"],configSpace["ygap"],configSpace["rgap"]) 
+        #space needs to be defined here at the beginning so that menu and button commands can reffer to it without the Spce commands being "undefined"
         
         #Menu Bar UI
         #   A pretty standard block of code that just defines some menus at the top, most of which are currently placeholders.
@@ -151,7 +180,6 @@ class UI:
         self.file = Menu(self.bar, tearoff=0)
         self.bar.add_cascade(label="File", menu=self.file)
         self.file.add_command(label="Clear Canvas", command=self.real.clearCanvas)
-        self.file.add_command(label="Test Range", command=self.testRange)
         self.file.add_command(label="Vintage Project", command=self.doNothing)
         self.file.add_separator()
         self.file.add_command(label="Delete Project", command=self.doNothing)
@@ -183,6 +211,7 @@ class UI:
         self.entryFunkMax = Entry(parent,font=configFont, textvariable=self.controlFunkMax)
         self.entryFunkStep = Entry(parent,font=configFont, textvariable=self.controlFunkStep)
         self.checkSmooth = Checkbutton(parent,variable=self.controlSmooth) #This is the smoothing checkbutton
+        self.btnColor = Button(parent, background=self.funkColor,relief=RIDGE,text="Color",borderwidth="3",command=self.pickColor)
         
         self.controlFunkMin.set("0") #This sets up default values for entry boxes
         self.controlFunkMax.set("2 * math.pi")
@@ -196,6 +225,7 @@ class UI:
         self.entryFunkMax.grid(column=1,row=4,sticky=W+E)
         self.entryFunkStep.grid(column=2,row=4,sticky=W+E)
         self.checkSmooth.grid(column=4,row=3)
+        self.btnColor.grid(column=3,row=4)
         
         
         #Explicit Functions UI
@@ -239,18 +269,22 @@ class UI:
         self.btnPlusMinusParX.grid(column=4,row=8)
         self.btnPlusMinusParY.grid(column=4,row=7)
         
-    def testRange(self):
-        beg=float(self.entryFunkMin.get())
-        mid=float(self.entryFunkStep.get())
-        end=float(self.entryFunkMax.get())
-        print("beg: " + str(beg))
-        print("mid: " + str(mid))
-        print("end: " + str(end))
-        print(domainGen(beg,end,mid))
-        
+
     def doNothing(self):
         print(random.choice(["donuts","","coffee","42","Spaghetti"]))
-        
+    
+    def pickColor(self):
+        triple,tempcolor = colorchooser.askcolor(color=self.funkColor)
+        if triple == None or self.funkColor == None:#This just checks if the user has clicked "Cancel" if so, this function does nothing.
+            pass
+        else:
+            self.funkColor = tempcolor
+            bglum = 1 - ( (0.299 * triple[0]) + (0.587 * triple[1]) + (0.114 * triple[2]))/255 #this rather confusing line averages the R, G and B values, weighting them for human perception to calculate the brightness
+            if bglum > 0.5:#This condition is "True" when color is DARK, not LIGHT
+                self.btnColor.configure(background=self.funkColor,foreground="white")
+            else:
+                self.btnColor.configure(background=self.funkColor,foreground="black")
+    
     def funcNotFound(self):#displays a box asking the user to enter a function
         tkinter.messagebox.showinfo("You Gotta Get Funky", "Please Enter A Function")
         return True
@@ -263,10 +297,11 @@ class UI:
         
     def plusMinusParY(self):
         self.entryFunkParY.insert(len(self.controlFunkParY.get()),"±")
-
-
+#
+#
 class Space:
     def __init__(self,parent,pwidth,pheight,polar,xl,xr,yb,yt,mr,xgap,ygap,rgap):#parent must be of UI class
+        global iterateFunk
         self.parent = parent
         self.w = pwidth #pwidth= INT width of the Space in pixels
         self.h = pheight #pheight= INT height of the Space in pixels
@@ -339,33 +374,15 @@ class Space:
         else:
             self.funkList.append(Funk(self,"par",self.parent.controlSmooth,parX = self.parent.entryFunkParX.get(),parY = self.parent.entryFunkParY.get()))
     
-    #Plus Minus functionality
-    def iterateFunk(funk):
-        length = funk.count("±") #this stores the length of the binary numbers used to calculate possible combinations
-        combinations = 2**length #this is the total number of binary combinations of +s and -s
-        str_index = search("±",funk)
-        orders = [] #instantiates empty list for storing all the binary combinations
-        new_funks = [] #instantiates empty list for storing all the new functions generated
-        for i in range(combinations):
-            orders.append(get_bin(i,length))#adds a binary number to "orders" from 0 to 2**length
-        for o in orders: #loops through every possible order
-            track_o = list(o) #copies the current order as a list into temporary variable
-            list_funk = list(funk) #copies the function as a list into temporary variable
-            for i in range(length): #iterates over each ± sign
-                if int(track_o.pop(0)) == 0:#0 replaces it with +, 1 replaces it with a -
-                    list_funk[int(str_index[i])] = "+"
-                else:
-                    list_funk[int(str_index[i])] = "-"
-            new_funks.append("".join(list_funk))
-        return new_funks
+
     
     #Clear the canvas of lines    
     def clearCanvas(self):
         for f in self.funkList:
             self.can.delete(f.line)
         self.funkList = []
-
-
+#
+#
 class Point: #this class is used to draw points on the canvas
     def __init__(self,parent,xtheta,yr):#parent must be a "Space" object, the other two args specify coordinates
         self.parent = parent
@@ -377,16 +394,16 @@ class Point: #this class is used to draw points on the canvas
             self.vert = parent.can.create_line(xcenter,ycenter+11,xcenter,ycenter-12)
             self.rndl = parent.can.create_oval(xcenter-8,ycenter+8,xcenter+8,ycenter-8,outline="red")
             self.lbl = parent.can.create_text(xcenter,ycenter+20,text=str([xtheta,yr]),font = configFont)
-
-
+#
+#
 class MajorAxes: #this is the primary X and Y axes gridlines (see minor for the faded lines)
     def __init__(self,parent): #parent must be a "Space" object
         self.parent = parent
         xorig,yorig = parent.coordPxl(0,0)#calculates the coordinates of the origin
         self.xaxis = parent.can.create_line(0,yorig,parent.w,yorig,width=2) #creates x axis from the leftmost pixel to the rightmost
         self.yaxis = parent.can.create_line(xorig,0,xorig,parent.h,width=2) #creates x axis from the topmost pixel to the bottommost
-
-
+#
+#
 class MinorAxes: #this object is the minor axis gridlines (the faded ones)
     def __init__(self,parent):#parent must be a "Space" object
         self.parent = parent
@@ -408,8 +425,8 @@ class MinorAxes: #this object is the minor axis gridlines (the faded ones)
                 for i in parent.ycoord:
                     pxl = parent.coordPxl(0,i)
                     self.yaxes.append(parent.can.create_line(0,pxl[1],parent.w,pxl[1],fill="gray80"))
- 
-                
+# 
+#
 class TickLabels: #this is the numbered labels for axes.
     def __init__(self,parent):#parent must be a "Space" object
         self.parent = parent
@@ -419,7 +436,7 @@ class TickLabels: #this is the numbered labels for axes.
         else:
             self.xlbls = [] #creates an empty list object to store the x axis number labels
             self.xmarks = [] #creates an empty list for the tick mark objects
-            botPxl = self.org[1] + 6
+            botPxl = self.org[1] + 6 #This number defines how much it pokes out. It is the top and bottom pixel of the tick mark itself which is the origin plus/minus however many pixels.
             topPxl = self.org[1] - 6
             for i in parent.xcoord:
                 xPxl = parent.coordPxl(i,0)
@@ -435,8 +452,8 @@ class TickLabels: #this is the numbered labels for axes.
             for i in parent.ycoord:
                 yPxl = parent.coordPxl(0,i)
                 self.ylbls.append(parent.can.create_line(lftPxl,yPxl[1],rgtPxl,yPxl[1],width=2))
-                
-                
+#                
+#
 class Funk:#this class stores and draws functions on the space
     def __init__(self,parent,type,smooth,exp="",parX="",parY=""):
         #parent must be a space object
@@ -457,7 +474,6 @@ class Funk:#this class stores and draws functions on the space
              tkinter.messagebox.showinfo("Boundin'", "There's something wrong with your bounds.")
              raise
         if type == "exp":
-            #funk = parent.parent.entryFunkExp.get()            #commented out to test plus/minus functionality
             for c in domainGen(beg,end,mid):
                 x = c
                 self.coordsX.append(x)
@@ -471,8 +487,6 @@ class Funk:#this class stores and draws functions on the space
                     x = x +0.0001
                     self.coordsY.append(eval(self.funk))
         elif type == "par":
-            #funkX = parent.parent.entryFunkParX.get()          #commented out to test plus/minus functionality
-            #funkY = parent.parent.entryFunkParY.get()          #commented out to test plus/minus functionality
             for c in domainGen(beg,end,mid):
                 t = c
                 try:
@@ -491,13 +505,13 @@ class Funk:#this class stores and draws functions on the space
             self.pxls.append(pxlX)
             self.pxls.append(pxlY)
         if smooth == 0:
-            self.line = parent.can.create_line(*self.pxls,smooth=False)
+            self.line = parent.can.create_line(*self.pxls,smooth=False,fill=parent.parent.funkColor)
         else:
-            self.line = parent.can.create_line(*self.pxls,smooth=True)
+            self.line = parent.can.create_line(*self.pxls,smooth=True,fill=parent.parent.funkColor)
         
         
         
-#___________________________SCRIPT______________________
+##___________________________SCRIPT______________________
 
 
 ui = UI(root)
