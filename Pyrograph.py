@@ -1,4 +1,4 @@
-program_ver = "0.11" #Updated with any new code/upload to gitHub
+program_ver = "0.12" #Updated with any new code/upload to gitHub
 config_ver = "0.01"
 py_ver = "3.5.1" #Updated whenever the code is tested on a newer version of Python
 
@@ -8,30 +8,16 @@ from tkinter import *
 #from tkinter.ttk import *
 from tkinter import filedialog
 from tkinter import colorchooser
-import itertools,math,cmath,random
+import itertools,math,cmath,random,configparser
 
-#_________User Configuration___________
-
-configFont = ('Courier','-18',"bold")
-configUI = {
-}
-configSpace = {
-"pwidth":1500,
-"pheight":1200,
-"polar":False,
-"xl":-50,
-"xr":50,
-"yb":-40,
-"yt":40,
-"mr":10,
-"xgap":1,
-"ygap":1,
-"rgap":1
-}
-
-#_________CONSTANTS and GLOBALS____________
+##CONSTANTS and GLOBALS
 root = Tk() #Top Level Window Object
 root.title("Pyrograph")
+def dictEval(dic):#Evaluates a dictionary of strings into their interpreted values.
+    evalled = {}#Creates empty temporary dictionary.
+    for k,v in dic.items():#Goes through each key,value pair of the input.
+        evalled[k] = eval(v)#Adds entry to temporary variable with string evaluated.
+    return(evalled)#Returns the new dictionary.
 
 def domainGen(start,end,step):
     global progress
@@ -162,13 +148,26 @@ COLORS = ['snow', 'ghost white', 'white smoke', 'gainsboro', 'floral white', 'ol
           'gray84', 'gray85', 'gray86', 'gray87', 'gray88', 'gray89', 'gray90', 'gray91', 'gray92',
           'gray93', 'gray94', 'gray95', 'gray97', 'gray98', 'gray99']
 
+##User Configuration
 
-#_______________________CLASSES________________________
+parser = configparser.ConfigParser()
+configfileObject = filedialog.askopenfile(parent=root,mode='rb',title='Choose a file')
+with open(configfileObject.name) as rf:
+    parser.read_file(rf)
+    
+configFont = ('Courier','-18',"bold")
+configInit = dictEval(dict(parser.items("INIT")
+configSpace = dictEval(dict(parser.items("SPACE")))
+
+
+##CLASSES
+#
+#
 class UI():
     def __init__(self,parent):#parent must be Tk() Object
         global iterateFunk
         self.parent = parent
-        self.color = "red"
+        self.funkColor = "red"
         self.real = Space(self,configSpace["pwidth"],configSpace["pheight"],configSpace["polar"],configSpace["xl"],configSpace["xr"],configSpace["yb"],configSpace["yt"],configSpace["mr"],configSpace["xgap"],configSpace["ygap"],configSpace["rgap"]) 
         #space needs to be defined here at the beginning so that menu and button commands can reffer to it without the Spce commands being "undefined"
         
@@ -212,7 +211,7 @@ class UI():
         self.entryFunkMax = Entry(parent,font=configFont, textvariable=self.controlFunkMax)
         self.entryFunkStep = Entry(parent,font=configFont, textvariable=self.controlFunkStep)
         self.checkSmooth = Checkbutton(parent,variable=self.controlSmooth) #This is the smoothing checkbutton
-        self.btnColor = Button(parent, background=self.color,relief=RIDGE,text="Color",borderwidth="3",command=self.pickColor)
+        self.btnColor = Button(parent, background=self.funkColor,relief=RIDGE,text="Color",borderwidth="3",command=self.pickColor)
         
         self.controlFunkMin.set("0") #This sets up default values for entry boxes
         self.controlFunkMax.set("2 * math.pi")
@@ -275,12 +274,16 @@ class UI():
         print(random.choice(["donuts","","coffee","42","Spaghetti"]))
     
     def pickColor(self):
-        triple,self.color = colorchooser.askcolor(color=self.color)
-        bglum = 1 - ( (0.299 * triple[0]) + (0.587 * triple[1]) + (0.114 * triple[2]))/255 #this rather confusing line averages the R, G and B values, weighting them for human perception to calculate the brightness
-        if bglum > 0.5:#This condition is "True" when color is DARK, not LIGHT
-            self.btnColor.configure(background=self.color,foreground="white")
+        triple,tempcolor = colorchooser.askcolor(color=self.funkColor)
+        if triple == None or self.funkColor == None:#This just checks if the user has clicked "Cancel" if so, this function does nothing.
+            pass
         else:
-            self.btnColor.configure(background=self.color,foreground="black")
+            self.funkColor = tempcolor
+            bglum = 1 - ( (0.299 * triple[0]) + (0.587 * triple[1]) + (0.114 * triple[2]))/255 #this rather confusing line averages the R, G and B values, weighting them for human perception to calculate the brightness
+            if bglum > 0.5:#This condition is "True" when color is DARK, not LIGHT
+                self.btnColor.configure(background=self.funkColor,foreground="white")
+            else:
+                self.btnColor.configure(background=self.funkColor,foreground="black")
     
     def funcNotFound(self):#displays a box asking the user to enter a function
         tkinter.messagebox.showinfo("You Gotta Get Funky", "Please Enter A Function")
@@ -294,8 +297,8 @@ class UI():
         
     def plusMinusParY(self):
         self.entryFunkParY.insert(len(self.controlFunkParY.get()),"±")
-
-
+#
+#
 class Space:
     def __init__(self,parent,pwidth,pheight,polar,xl,xr,yb,yt,mr,xgap,ygap,rgap):#parent must be of UI class
         global iterateFunk
@@ -378,8 +381,8 @@ class Space:
         for f in self.funkList:
             self.can.delete(f.line)
         self.funkList = []
-
-
+#
+#
 class Point: #this class is used to draw points on the canvas
     def __init__(self,parent,xtheta,yr):#parent must be a "Space" object, the other two args specify coordinates
         self.parent = parent
@@ -391,16 +394,16 @@ class Point: #this class is used to draw points on the canvas
             self.vert = parent.can.create_line(xcenter,ycenter+11,xcenter,ycenter-12)
             self.rndl = parent.can.create_oval(xcenter-8,ycenter+8,xcenter+8,ycenter-8,outline="red")
             self.lbl = parent.can.create_text(xcenter,ycenter+20,text=str([xtheta,yr]),font = configFont)
-
-
+#
+#
 class MajorAxes: #this is the primary X and Y axes gridlines (see minor for the faded lines)
     def __init__(self,parent): #parent must be a "Space" object
         self.parent = parent
         xorig,yorig = parent.coordPxl(0,0)#calculates the coordinates of the origin
         self.xaxis = parent.can.create_line(0,yorig,parent.w,yorig,width=2) #creates x axis from the leftmost pixel to the rightmost
         self.yaxis = parent.can.create_line(xorig,0,xorig,parent.h,width=2) #creates x axis from the topmost pixel to the bottommost
-
-
+#
+#
 class MinorAxes: #this object is the minor axis gridlines (the faded ones)
     def __init__(self,parent):#parent must be a "Space" object
         self.parent = parent
@@ -422,8 +425,8 @@ class MinorAxes: #this object is the minor axis gridlines (the faded ones)
                 for i in parent.ycoord:
                     pxl = parent.coordPxl(0,i)
                     self.yaxes.append(parent.can.create_line(0,pxl[1],parent.w,pxl[1],fill="gray80"))
- 
-                
+# 
+#
 class TickLabels: #this is the numbered labels for axes.
     def __init__(self,parent):#parent must be a "Space" object
         self.parent = parent
@@ -449,8 +452,8 @@ class TickLabels: #this is the numbered labels for axes.
             for i in parent.ycoord:
                 yPxl = parent.coordPxl(0,i)
                 self.ylbls.append(parent.can.create_line(lftPxl,yPxl[1],rgtPxl,yPxl[1],width=2))
-                
-                
+#                
+#
 class Funk:#this class stores and draws functions on the space
     def __init__(self,parent,type,smooth,exp="",parX="",parY=""):
         #parent must be a space object
@@ -502,13 +505,13 @@ class Funk:#this class stores and draws functions on the space
             self.pxls.append(pxlX)
             self.pxls.append(pxlY)
         if smooth == 0:
-            self.line = parent.can.create_line(*self.pxls,smooth=False,fill=parent.parent.color)
+            self.line = parent.can.create_line(*self.pxls,smooth=False,fill=parent.parent.funkColor)
         else:
-            self.line = parent.can.create_line(*self.pxls,smooth=True,fill=parent.parent.color)
+            self.line = parent.can.create_line(*self.pxls,smooth=True,fill=parent.parent.funkColor)
         
         
         
-#___________________________SCRIPT______________________
+##___________________________SCRIPT______________________
 
 
 ui = UI(root)

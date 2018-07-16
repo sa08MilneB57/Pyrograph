@@ -21,15 +21,19 @@ To draw a function type a mathematical expression in python code into the entry 
 3. Allow users to save and load functions in text files using tkinters File Selection Window.
    
 4. Error handling (check for bad user inputs, bad config files)
+
+5. Menu with currently displayed functions to allow editing/redrawing.
+
+6. Create function that can raise negative powers to a fractional root.
   
-5. Find out why progress bars don't seem to work whenever I try to add them
+7. Find out why progress bars don't seem to work whenever I try to add them
   
-6. Polar coordinate grids.
+8. Polar coordinate grids.
   
   *  Have the labels for y(x) and such change into r(theta)
     
   *  Add a "theta" button similar to +- button
     
-7. "Complex Mode" allowing automatic handling of complex numbers without user inputing the .real and .imag themselves.
+9. "Complex Mode" allowing automatic handling of complex numbers without user inputing the .real and .imag themselves.
 
-8. Draggable "Points" that can be used to figure out exact values. Have them "snap" to function lines.
+10. Draggable "Points" that can be used to figure out exact values. Have them "snap" to function lines.
