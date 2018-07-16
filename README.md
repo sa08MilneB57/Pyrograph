@@ -18,11 +18,11 @@ To draw a function type a mathematical expression in python code into the entry 
   
 2. A settings window allowing the user to copy/paste settings or use a menu.   
 
-3. Allow users to save and load functions in text files using tkinters File Selection Window.
-   
-4. Error handling (check for bad user inputs, bad config files)
+3. Menu with currently displayed functions to allow editing/redrawing.
 
-5. Menu with currently displayed functions to allow editing/redrawing.
+4. Allow users to save and load functions in text files using tkinters File Selection Window.
+   
+5. Error handling (check for bad user inputs, bad config files)
 
 6. Create function that can raise negative powers to a fractional root.
   
