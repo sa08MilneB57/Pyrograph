@@ -18,7 +18,7 @@ To draw a function type a mathematical expression in python code into the entry 
   
 2. A settings window allowing the user to copy/paste settings or use a menu.   
 
-3. Menu with currently displayed functions to allow editing/redrawing.
+3. Menu with currently displayed functions to allow editing/~redrawing~.
 
 4. Allow users to save and load functions in text files using tkinters File Selection Window.
    
@@ -37,3 +37,5 @@ To draw a function type a mathematical expression in python code into the entry 
 9. "Complex Mode" allowing automatic handling of complex numbers without user inputing the .real and .imag themselves.
 
 10. Draggable "Points" that can be used to figure out exact values. Have them "snap" to function lines.
+
+11. Add Series "S(n)" calculation that places points if n has an integer only value
