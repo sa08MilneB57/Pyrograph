@@ -13,6 +13,7 @@ import itertools,math,cmath,random,configparser
 ##CONSTANTS and GLOBALS
 root = Tk() #Top Level Window Object
 root.title("Pyrograph")
+
 def dictEval(dic):#Evaluates a dictionary of strings into their interpreted values.
     evalled = {}#Creates empty temporary dictionary.
     for k,v in dic.items():#Goes through each key,value pair of the input.
@@ -148,16 +149,23 @@ COLORS = ['snow', 'ghost white', 'white smoke', 'gainsboro', 'floral white', 'ol
           'gray84', 'gray85', 'gray86', 'gray87', 'gray88', 'gray89', 'gray90', 'gray91', 'gray92',
           'gray93', 'gray94', 'gray95', 'gray97', 'gray98', 'gray99']
 
-##User Configuration
+##User Configuration    (Make it load default settings if no config file is loaded)
 
 parser = configparser.ConfigParser()
-configfileObject = filedialog.askopenfile(parent=root,mode='rb',title='Choose a file')
-with open(configfileObject.name) as rf:
-    parser.read_file(rf)
+configfileObject = filedialog.askopenfile(parent=root,mode='rb',title='Choose a config file',filetypes=[("Pyrograph Config INI","*.ini")])
+if configfileObject == None:
+     tkinter.messagebox.showwarning("No Config File", "Loading Default Settings")
+     configInit = {}
+     configSpace = {"pwidth":1500,"pheight":1200,"polar":False,"xl":-50,"xr":50,"yb":-40,"yt":40,"mr":10,"xgap":1,"ygap":1,"rgap":1}
+else:
+    with open(configfileObject.name) as rf:
+        parser.read_file(rf)
+        configInit = dictEval(dict(parser.items("INIT")))
+        configSpace = dictEval(dict(parser.items("SPACE")))
     
-configFont = ('Courier','-18',"bold")
-configInit = dictEval(dict(parser.items("INIT")))
-configSpace = dictEval(dict(parser.items("SPACE")))
+monoFont = ('Courier','-18',"bold")
+trueFont = ('Arial','-14')
+
 
 
 ##CLASSES
@@ -168,10 +176,11 @@ class UI():
         global iterateFunk
         self.parent = parent
         self.funkColor = "red"
+        self.clrTxt = "black"
         self.real = Space(self,configSpace["pwidth"],configSpace["pheight"],configSpace["polar"],configSpace["xl"],configSpace["xr"],configSpace["yb"],configSpace["yt"],configSpace["mr"],configSpace["xgap"],configSpace["ygap"],configSpace["rgap"]) 
         #space needs to be defined here at the beginning so that menu and button commands can reffer to it without the Spce commands being "undefined"
         
-        #Menu Bar UI
+        ##Menu Bar UI
         #   A pretty standard block of code that just defines some menus at the top, most of which are currently placeholders.
         
         self.bar = Menu(parent)
@@ -191,27 +200,27 @@ class UI():
         self.edit.add_command(label="Copy", command=self.doNothing)
         self.edit.add_command(label="Paste", command=self.doNothing)
         
-        #Space Placement
+        ##Space Placement
         #   Simply places the space into a space in the UI
         #   I would prefer to create the space here but the menu buttons need to be able to reference it and I would rather have the UI class written roughly in order of the widgets position.
         self.real.can.grid(row=0,column=0,rowspan=3,columnspan=6) #grids the space canvas into the window
         
-        #Function Draw Config
+        ##Function Draw Config
         #   Sets up the buttons and entry boxes for function bounds and drawing options.
         self.controlSmooth = IntVar() #This is a control variable for the checkbutton
         self.controlFunkMin = StringVar() #These instantiate control variables for the text boxes contents
         self.controlFunkMax = StringVar()
         self.controlFunkStep = StringVar()
 
-        self.labelFunkMin = Label(parent, text="Input Minimum") #These set up the labels
-        self.labelFunkMax = Label(parent, text="Input Maximum")
-        self.labelFunkStep = Label(parent, text="Input Step")
-        self.labelSmooth = Label(parent, text="Smoothing:")
-        self.entryFunkMin = Entry(parent,font=configFont, textvariable=self.controlFunkMin) #These set up entry boxes
-        self.entryFunkMax = Entry(parent,font=configFont, textvariable=self.controlFunkMax)
-        self.entryFunkStep = Entry(parent,font=configFont, textvariable=self.controlFunkStep)
+        self.labelFunkMin = Label(parent, text="Input Minimum",font=trueFont) #These set up the labels
+        self.labelFunkMax = Label(parent, text="Input Maximum",font=trueFont)
+        self.labelFunkStep = Label(parent, text="Input Step",font=trueFont)
+        self.labelSmooth = Label(parent, text="Smoothing:",font=trueFont)
+        self.entryFunkMin = Entry(parent,font=monoFont, textvariable=self.controlFunkMin) #These set up entry boxes
+        self.entryFunkMax = Entry(parent,font=monoFont, textvariable=self.controlFunkMax)
+        self.entryFunkStep = Entry(parent,font=monoFont, textvariable=self.controlFunkStep)
         self.checkSmooth = Checkbutton(parent,variable=self.controlSmooth) #This is the smoothing checkbutton
-        self.btnColor = Button(parent, background=self.funkColor,relief=RIDGE,text="Color",borderwidth="3",command=self.pickColor)
+        self.btnColor = Button(parent, background=self.funkColor,relief=RIDGE,text="Draw Color",borderwidth="3",command=self.pickColor,font=monoFont)
         
         self.controlFunkMin.set("0") #This sets up default values for entry boxes
         self.controlFunkMax.set("2 * math.pi")
@@ -228,14 +237,14 @@ class UI():
         self.btnColor.grid(column=3,row=4)
         
         
-        #Explicit Functions UI
+        ##Explicit Functions UI
         #   Sets up the buttons and entry boxes for inputing explicit functions.
         self.controlFunkExp = StringVar()
         
-        self.labelFunkExp = Label(parent, text="Function: y=")
-        self.entryFunkExp = Entry(parent, font=configFont, textvariable=self.controlFunkExp) #Creates an input box in the window "root"
-        self.btnFunkExp = Button(parent, text="Explicit Funk",command=self.real.drawFunkExp)
-        self.btnPlusMinusExp = Button(parent, text="±",command=self.plusMinusExp)
+        self.labelFunkExp = Label(parent, text="Function: y=",font=trueFont)
+        self.entryFunkExp = Entry(parent, font=monoFont, textvariable=self.controlFunkExp) #Creates an input box in the window "root"
+        self.btnFunkExp = Button(parent, text="Draw Explicit Function",command=self.real.drawFunkExp,font=trueFont)
+        self.btnPlusMinusExp = Button(parent, text="±",command=self.plusMinusExp,font=trueFont)
         
         self.controlFunkExp.set("x**2") #This sets up default values for entry box
         
@@ -245,18 +254,18 @@ class UI():
         self.btnPlusMinusExp.grid(column=4,row=6)
         
         
-        #Parametric Functions UI
+        ##Parametric Functions UI
         #   Sets up the buttons and entry boxes for inputing parametric functions.
         self.controlFunkParX = StringVar()
         self.controlFunkParY = StringVar()
         
-        self.labelFunkParY = Label(parent, text="Function: y(t)=")
-        self.labelFunkParX = Label(parent, text="Function: x(t)=")
-        self.entryFunkParX = Entry(parent, font=configFont, textvariable=self.controlFunkParX)
-        self.entryFunkParY = Entry(parent, font=configFont, textvariable=self.controlFunkParY)
-        self.btnFunkPar = Button(parent, text="Parametric Funk",command=self.real.drawFunkPar)
-        self.btnPlusMinusParX = Button(parent, text="±",command=self.plusMinusParX)
-        self.btnPlusMinusParY = Button(parent, text="±",command=self.plusMinusParY)
+        self.labelFunkParY = Label(parent, text="Function: y(t)=",font=trueFont)
+        self.labelFunkParX = Label(parent, text="Function: x(t)=",font=trueFont)
+        self.entryFunkParX = Entry(parent, font=monoFont, textvariable=self.controlFunkParX)
+        self.entryFunkParY = Entry(parent, font=monoFont, textvariable=self.controlFunkParY)
+        self.btnFunkPar = Button(parent, text="Draw Parametric Function",command=self.real.drawFunkPar,font=trueFont)
+        self.btnPlusMinusParX = Button(parent, text="±",command=self.plusMinusParX,font=trueFont)
+        self.btnPlusMinusParY = Button(parent, text="±",command=self.plusMinusParY,font=trueFont)
         
         self.controlFunkParX.set("25 * math.sin(t)")  #This sets up default values for entry boxes
         self.controlFunkParY.set("25 * math.cos(t)")
@@ -269,7 +278,23 @@ class UI():
         self.btnPlusMinusParX.grid(column=4,row=8)
         self.btnPlusMinusParY.grid(column=4,row=7)
         
-
+        ##Function Menu UI
+        #   Sets up the side menu that lists functions.
+        self.controlListboxFunk = StringVar()
+        
+        self.listboxFunk = Listbox(parent,listvariable=self.controlListboxFunk,width=40,font=trueFont)
+        self.btnRedraw = Button(parent,text="Redraw",width=20,font=trueFont,command=self.real.redrawLine)
+        self.btnReload = Button(parent,text="Reload",width=20,font=trueFont)
+        self.btnDelete = Button(parent,text="Delete",width=20,command=self.real.deleteLine,font=trueFont)
+        self.btnClear = Button(parent,text="Clear From List\n(Use with caution.)",width=20,font=trueFont)
+        
+        self.listboxFunk.grid(column=6, row=0, rowspan=3,columnspan=2,sticky=N+S)
+        self.btnRedraw.grid(column=6, row=3)
+        self.btnReload.grid(column=7, row=3)
+        self.btnDelete.grid(column=6, row=4)
+        self.btnClear.grid(column=7, row=4)
+        
+    ##UI Functions
     def doNothing(self):
         print(random.choice(["donuts","","coffee","42","Spaghetti"]))
     
@@ -282,11 +307,13 @@ class UI():
             bglum = 1 - ( (0.299 * triple[0]) + (0.587 * triple[1]) + (0.114 * triple[2]))/255 #this rather confusing line averages the R, G and B values, weighting them for human perception to calculate the brightness
             if bglum > 0.5:#This condition is "True" when color is DARK, not LIGHT
                 self.btnColor.configure(background=self.funkColor,foreground="white")
+                self.clrTxt="white"
             else:
                 self.btnColor.configure(background=self.funkColor,foreground="black")
+                self.clrTxt="black"
     
     def funcNotFound(self):#displays a box asking the user to enter a function
-        tkinter.messagebox.showinfo("You Gotta Get Funky", "Please Enter A Function")
+        tkinter.messagebox.showerror("You Gotta Get Funky", "Please Enter A Function")
         return True
     
     def plusMinusExp(self):
@@ -341,7 +368,7 @@ class Space:
         self.axlbls = TickLabels(self) #object that stores and calls the TickLabels object for displaying numbers by the axes
         self.funkList = [] #creates an empty list to store functions
     
-    #Coordinate Conversion Functions
+    ##Coordinate Conversion Functions
     def coordPxl(self,xcoord,ycoord): #input a real coordinate, returns a pixel location as a list object
         pixelx = int((xcoord - self.minx) * self.dx)
         pixely = int(self.h - ((ycoord - self.miny) * self.dy))
@@ -358,7 +385,7 @@ class Space:
     def pxlPol(self,x,y): #input a pixel location, returns a polar coordinate
         pass #polar update pending
     
-    #Line drawing functions
+    ##Line drawing functions
     def drawFunkExp(self):
         if "±" in self.parent.entryFunkExp.get():
             for f in iterateFunk(self.parent.entryFunkExp.get()):
@@ -373,14 +400,32 @@ class Space:
                 self.funkList.append(Funk(self,"par",self.parent.controlSmooth,parX = fpairs[fp][0],parY = fpairs[fp][1]))
         else:
             self.funkList.append(Funk(self,"par",self.parent.controlSmooth,parX = self.parent.entryFunkParX.get(),parY = self.parent.entryFunkParY.get()))
-    
 
-    
-    #Clear the canvas of lines    
+    ##Line Delete Functions    
     def clearCanvas(self):
         for f in self.funkList:
             self.can.delete(f.line)
         self.funkList = []
+    
+    def deleteLine(self):
+        if self.parent.listboxFunk.curselection()==():#if a function has been selected in the menu, the tuple will contain the index of that item
+            tkinter.messagebox.showerror("No Function Error", "Please select a function")
+        else:
+            selected = self.parent.listboxFunk.curselection()[0]#stores the current selection as a tuple of the list indexes
+            f = self.funkList[selected] #Takes advantage of the fact that the Funk list and the Listbox List should be in the same order
+            self.can.delete(f.line)#Deletes the line assosciated with Funk object "f"
+            self.funkList.pop(selected)#deletes the funk object
+            self.parent.listboxFunk.delete(selected)
+    
+    def redrawLine(self):
+        if self.parent.listboxFunk.curselection()==():#if a function has been selected in the menu, the tuple will contain the index of that item
+            tkinter.messagebox.showerror("No Function Error", "Please select a function")
+        else:
+            selected = self.parent.listboxFunk.curselection()[0]#stores the current selection as an integer index (There should be no instances of multiple selections)
+            f = self.funkList[selected] #Takes advantage of the fact that the Funk list and the Listbox List should be in the same order
+            f.redraw()
+            self.parent.listboxFunk.itemconfig(selected,background=self.parent.funkColor,foreground=self.parent.clrTxt)
+                
 #
 #
 class Point: #this class is used to draw points on the canvas
@@ -393,7 +438,7 @@ class Point: #this class is used to draw points on the canvas
             self.hor = parent.can.create_line(xcenter-11,ycenter,xcenter+12,ycenter)
             self.vert = parent.can.create_line(xcenter,ycenter+11,xcenter,ycenter-12)
             self.rndl = parent.can.create_oval(xcenter-8,ycenter+8,xcenter+8,ycenter-8,outline="red")
-            self.lbl = parent.can.create_text(xcenter,ycenter+20,text=str([xtheta,yr]),font = configFont)
+            self.lbl = parent.can.create_text(xcenter,ycenter+20,text=str([xtheta,yr]),font = monoFont)
 #
 #
 class MajorAxes: #this is the primary X and Y axes gridlines (see minor for the faded lines)
@@ -460,6 +505,8 @@ class Funk:#this class stores and draws functions on the space
         #type is a string defining whether the function is explicit"exp" or parametric"par"
         #funk is a string containing the expression of the function
         # **functions represents the keyword arguments
+        self.parent = parent
+        self.smooth = smooth
         self.funk = str(exp) #string expression of function
         self.funkX = str(parX) #string expression of parametric X function
         self.funkY = str(parY) #string expression of parametric Y function
@@ -467,14 +514,14 @@ class Funk:#this class stores and draws functions on the space
         self.coordsX = [] #defines an empty list to store the X coordinates
         self.coordsY = [] #defines an empty list to store the Y
         try:
-            beg=eval(parent.parent.entryFunkMin.get())
-            mid=eval(parent.parent.entryFunkStep.get())
-            end=eval(parent.parent.entryFunkMax.get())
+            self.beg=eval(parent.parent.entryFunkMin.get())
+            self.mid=eval(parent.parent.entryFunkStep.get())
+            self.end=eval(parent.parent.entryFunkMax.get())
         except:
-             tkinter.messagebox.showinfo("Boundin'", "There's something wrong with your bounds.")
+             tkinter.messagebox.showerror("Bounding Error", "There's something wrong with your bounds.")
              raise
         if type == "exp":
-            for c in domainGen(beg,end,mid):
+            for c in domainGen(self.beg,self.end,self.mid):
                 x = c
                 self.coordsX.append(x)
                 try:
@@ -486,12 +533,16 @@ class Funk:#this class stores and draws functions on the space
                     self.coordsX.append(x)
                     x = x +0.0001
                     self.coordsY.append(eval(self.funk))
+            parent.parent.listboxFunk.insert(END,"y=" + self.funk)#Adds itself to the Listbox
+            parent.parent.listboxFunk.itemconfig(END,background=self.parent.parent.funkColor,foreground=self.parent.parent.clrTxt)#Colours the item as the function is colored.
         elif type == "par":
-            for c in domainGen(beg,end,mid):
+            ##Mathematical Error Section
+            for c in domainGen(self.beg,self.end,self.mid):
                 t = c
                 try:
                     self.coordsX.append(eval(self.funkX))
                     self.coordsY.append(eval(self.funkY))
+                #Dividing By Zero
                 except ZeroDivisionError:
                     t = c - 0.0001
                     self.coordsX.append(eval(self.funkX))
@@ -499,6 +550,8 @@ class Funk:#this class stores and draws functions on the space
                     t = c +0.0001
                     self.coordsX.append(eval(self.funkX))
                     self.coordsY.append(eval(self.funkY))
+            parent.parent.listboxFunk.insert(END,"x=" + self.funkX + ", y=" + self.funkY)#Adds itself to the Listbox
+            parent.parent.listboxFunk.itemconfig(END,background=self.parent.parent.funkColor,foreground=self.parent.parent.clrTxt)#Colours the item as the function is colored.
 
         for x,y in zip(self.coordsX,self.coordsY):
             pxlX, pxlY = parent.coordPxl(x,y)
@@ -508,14 +561,20 @@ class Funk:#this class stores and draws functions on the space
             self.line = parent.can.create_line(*self.pxls,smooth=False,fill=parent.parent.funkColor)
         else:
             self.line = parent.can.create_line(*self.pxls,smooth=True,fill=parent.parent.funkColor)
+            
+    def redraw(self):
+        if self.smooth == 0:
+            self.parent.can.delete(self.line)
+            self.line = self.parent.can.create_line(*self.pxls,smooth=False,fill=self.parent.parent.funkColor)          
+        else:
+            self.parent.can.delete(self.line)
+            self.line = self.parent.can.create_line(*self.pxls,smooth=True,fill=self.parent.parent.funkColor)
         
         
         
-##___________________________SCRIPT______________________
-
+##SCRIPT
 
 ui = UI(root)
-
 root.mainloop()
 
 
